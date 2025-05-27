@@ -1,17 +1,21 @@
 import { Object3D, Scene } from 'three';
-import { EzIntersection } from '../events/Intersection';
 import { registerAll, unregisterAll } from '../core/MiscEventsManager';
-import { INTERACTION_DEFAULT } from '../core/InteractionDefault';
-import { addBase, removeBase } from './Object3D';
 import { EzFocusEvent } from '../events/FocusEvent';
+import { addBase, removeBase } from './Object3D';
 
 // TODO: setSceneReference and removeSceneReference should have an event
+// TODO: should we remove this rmeove/add override?
 
 Scene.prototype.continuousRaycasting = false;
 Scene.prototype.continuousRaycastingDropTarget = false;
+Scene.prototype.focusedObject = null;
 Scene.prototype.blurOnClickOut = false;
 Scene.prototype.timeScale = 1;
 Scene.prototype.totalTime = 0;
+
+Object.defineProperty(Scene.prototype, 'scene', {
+  get: function (this: Scene) { return this; }
+});
 
 Scene.prototype.focus = function (target?: Object3D): void {
   const focusableObj = target?.firstFocusable ?? null;
@@ -49,23 +53,6 @@ Scene.prototype.remove = function (object: Object3D) {
   removeBase.call(this, ...arguments);
   return this;
 };
-
-Object.defineProperty(Scene.prototype, 'userData', { // needed to inject code in constructor
-  set: function (this: Scene, value) {
-    this.focusable = false;
-    this.draggable = INTERACTION_DEFAULT.draggable;
-    this.interceptByRaycaster = INTERACTION_DEFAULT.interceptByRaycaster;
-
-    this.intersections = [];
-    this.intersectionsDropTarget = [];
-    this.scene = this;
-
-    Object.defineProperty(this, 'userData', {
-      value, writable: true, configurable: true
-    });
-  },
-  configurable: true
-});
 
 /** @internal */
 export function setSceneReference(target: Object3D, scene: Scene): void {

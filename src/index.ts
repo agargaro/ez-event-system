@@ -4,7 +4,6 @@ import type { SceneExt } from './patch/prototype/SceneExt';
 export * from './core/CursorManager';
 export * from './core/EventsDispatcher';
 export * from './core/Hitbox';
-export * from './core/InteractionDefault';
 export * from './core/MiscEventsManager';
 
 export * from './events/AnimateEvent';
@@ -23,6 +22,7 @@ export * from './patch/Object3D';
 export * from './patch/Quaternion';
 export * from './patch/Scene';
 export * from './patch/Vector3';
+export * from './patch/Visibility';
 // export * from './patch/WebGLRenderer';
 
 export * from './patch/prototype/Object3DExt';

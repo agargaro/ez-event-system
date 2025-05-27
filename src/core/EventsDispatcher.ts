@@ -3,6 +3,7 @@ import { applyObject3DRotationPatch } from '../patch/Object3D.js';
 import { patchPosition, patchScale } from '../patch/Vector3.js';
 import { register, unregister } from './MiscEventsManager.js';
 import { EzEventsList, EzInteractionEvents } from '../events/EventsList.js';
+import { patchVisibility } from '../patch/Visibility.js';
 
 export type EventCallback<K extends keyof EzEventsList> = (event?: EzEventsList[K]) => void;
 

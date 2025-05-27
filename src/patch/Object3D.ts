@@ -1,24 +1,25 @@
 import { Object3D } from 'three';
 import { EzEventsList } from '../events/EventsList';
-import { EventsDispatcher } from '../core/EventsDispatcher';
+import { EventCallback, EventsDispatcher } from '../core/EventsDispatcher';
 import { removeSceneReference, setSceneReference } from './Scene';
 import { patchPosition, patchScale } from './Vector3';
 import { patchQuaternion } from './Quaternion';
 import { patchRotation } from './Euler';
-import { INTERACTION_DEFAULT } from '../core/InteractionDefault';
 
 // TODO: override matrix4 prototype to use new props like _x instead of x?
 
-Object.defineProperty(Object3D.prototype, 'visible', {
-  get: function (this: Object3D) { return this.__visible; },
-  set: function (this: Object3D, value: boolean) {
-    if (this.__visible !== value) {
-      this.__visible = value;
-      this.__eventsDispatcher?.dispatchDescendant('visiblechange', { value, target: this });
-    }
-  },
-  configurable: true
-});
+Object3D.prototype.__enabled = true;
+Object3D.prototype.__hovered = false;
+Object3D.prototype.__focused = false;
+Object3D.prototype.__clicking = false;
+Object3D.prototype.__dragging = false;
+Object3D.prototype.__isDropTarget = false;
+Object3D.prototype.__isInteractable = false;
+
+Object3D.prototype.interceptByRaycaster = true;
+Object3D.prototype.focusable = false;
+Object3D.prototype.draggable = false;
+Object3D.prototype.findDropTarget = false;
 
 Object.defineProperty(Object3D.prototype, 'enabled', {
   get: function (this: Object3D) { return this.__enabled; },
@@ -34,14 +35,20 @@ Object.defineProperty(Object3D.prototype, 'enabled', {
   configurable: true
 });
 
-Object.defineProperty(Object3D.prototype, 'firstFocusable', {
-  get: function (this: Object3D) {
-    let obj: Object3D | null = this;
-    while (obj?.focusable === false) {
-      obj = obj.parent;
-    }
-    return obj;
-  }
+Object.defineProperty(Object3D.prototype, 'hovered', {
+  get: function (this: Object3D) { return this.__hovered; }
+});
+
+Object.defineProperty(Object3D.prototype, 'focused', {
+  get: function (this: Object3D) { return this.__focused; }
+});
+
+Object.defineProperty(Object3D.prototype, 'clicking', {
+  get: function (this: Object3D) { return this.__clicking; }
+});
+
+Object.defineProperty(Object3D.prototype, 'isDragging', {
+  get: function (this: Object3D) { return this.__dragging; }
 });
 
 Object.defineProperty(Object3D.prototype, 'enabledState', {
@@ -64,31 +71,27 @@ Object.defineProperty(Object3D.prototype, 'visibilityState', {
   }
 });
 
-Object.defineProperty(Object3D.prototype, 'hovered', {
+Object.defineProperty(Object3D.prototype, 'firstFocusable', {
   get: function (this: Object3D) {
-    return this.__hovered;
+    let obj: Object3D | null = this;
+    while (obj?.focusable === false) {
+      obj = obj.parent;
+    }
+    return obj;
   }
 });
 
-Object.defineProperty(Object3D.prototype, 'focused', {
-  get: function (this: Object3D) {
-    return this.__focused;
-  }
-});
+Object3D.prototype.applyFocus = function () {
+  this.scene?.focus(this);
+};
 
-Object.defineProperty(Object3D.prototype, 'clicking', {
-  get: function (this: Object3D) {
-    return this.__clicking;
+Object3D.prototype.applyBlur = function () {
+  if (this === this.scene?.focusedObject) {
+    this.scene.focus();
   }
-});
+};
 
-Object.defineProperty(Object3D.prototype, 'isDragging', {
-  get: function (this: Object3D) {
-    return this.__dragging;
-  }
-});
-
-Object3D.prototype.on = function <K extends keyof EzEventsList>(this: Object3D, types: K | K[], listener: (event: EzEventsList[K]) => void): (event: EzEventsList[K]) => void {
+Object3D.prototype.on = function <K extends keyof EzEventsList>(this: Object3D, types: K | K[], listener: EventCallback<K>): EventCallback<K> {
   this.__eventsDispatcher ??= new EventsDispatcher(this);
 
   if (typeof types === 'string') {
@@ -100,11 +103,11 @@ Object3D.prototype.on = function <K extends keyof EzEventsList>(this: Object3D, 
   return listener;
 };
 
-Object3D.prototype.hasEvent = function <K extends keyof EzEventsList>(type: K, listener: (event: EzEventsList[K]) => void): boolean {
+Object3D.prototype.hasEvent = function <K extends keyof EzEventsList>(type: K, listener: EventCallback<K>): boolean {
   return this.__eventsDispatcher?.has(type, listener) ?? false;
 };
 
-Object3D.prototype.off = function <K extends keyof EzEventsList>(type: K, listener: (event: EzEventsList[K]) => void): void {
+Object3D.prototype.off = function <K extends keyof EzEventsList>(type: K, listener: EventCallback<K>): void {
   this.__eventsDispatcher?.remove(type, listener);
 };
 
@@ -114,38 +117,6 @@ Object3D.prototype.trigger = function <T extends keyof EzEventsList>(type: T, ev
 
 Object3D.prototype.triggerAncestor = function <T extends keyof EzEventsList>(type: T, event?: EzEventsList[T]): void {
   this.__eventsDispatcher?.dispatchAncestorManual(type, event);
-};
-
-// TODO find a better way
-Object.defineProperty(Object3D.prototype, 'userData', { // needed to inject code in constructor
-  set: function (this: Object3D, value) {
-    this.focusable = INTERACTION_DEFAULT.focusable;
-    this.draggable = INTERACTION_DEFAULT.draggable;
-    this.interceptByRaycaster = INTERACTION_DEFAULT.interceptByRaycaster;
-    this.findDropTarget = false;
-    this.__focused = false;
-    this.__clicking = false;
-    this.__dragging = false;
-    this.__hovered = false;
-    this.__visible = true;
-    this.__enabled = true;
-    this.__isDropTarget = false;
-
-    Object.defineProperty(this, 'userData', {
-      value, writable: true, configurable: true
-    });
-  },
-  configurable: true
-});
-
-Object3D.prototype.applyFocus = function () {
-  this.scene?.focus(this);
-};
-
-Object3D.prototype.applyBlur = function () {
-  if (this === this.scene?.focusedObject) {
-    this.scene.focus();
-  }
 };
 
 /** @internal */

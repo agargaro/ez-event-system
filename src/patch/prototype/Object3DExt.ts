@@ -10,14 +10,13 @@ import { EzEventsList, EzInteractionEvents } from '../../events/EventsList';
 export interface Object3DExt {
   /** @internal */ __eventsDispatcher?: EventsDispatcher;
   /** @internal */ __enabled: boolean;
-  /** @internal */ __visible: boolean;
+  /** @internal */ __visible?: boolean;
   /** @internal */ __hovered: boolean;
   /** @internal */ __focused: boolean;
   /** @internal */ __clicking: boolean;
   /** @internal */ __dragging: boolean;
   /** @internal */ __isDropTarget: boolean;
   /** @internal */ __isInteractable: boolean;
-  /** @internal */ __baseVisibleDescriptor?: PropertyDescriptor;
   /** @internal */ __onChangeEulerBase?: () => void;
   /** @internal */ __onChangeQuaternionBase?: () => void;
 
@@ -28,7 +27,7 @@ export interface Object3DExt {
   enabled: boolean;
   /**
    * Determines if the **object** and **all of its children** can be intercepted by the main raycaster.
-   * @default INTERACTION_DEFAULT.interceptByRaycaster (true).
+   * @default true.
    */
   interceptByRaycaster: boolean;
   /** Array of hitboxes for collision detection. */
@@ -37,12 +36,12 @@ export interface Object3DExt {
   dragTarget?: Object3D;
   /**
    * Indicates whether the object can receive focus.
-   * @default INTERACTION_DEFAULT.focusable (true).
+   * @default false.
    */
   focusable: boolean;
   /**
    * Indicates whether the object is draggable.
-   * @default INTERACTION_DEFAULT.draggable (false).
+   * @default false.
    */
   draggable: boolean;
   /** Determines when the object is dragged, whether it will have to search for any drop targets. Default is `false`. */

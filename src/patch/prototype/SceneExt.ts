@@ -20,9 +20,9 @@ export interface SceneExt {
    */
   continuousRaycastingDropTarget: boolean;
   /** An array of intersections computed from the pointer (primary pointer only). */
-  intersections: EzIntersection[];
+  intersections?: EzIntersection[];
   /** An array of intersections computed from the pointer if an object is dragged and has 'findDropTarget' set to true (primary pointer only). */
-  intersectionsDropTarget: EzIntersection[];
+  intersectionsDropTarget?: EzIntersection[];
   /** A reference to the currently focused Object3D within the scene. */
   focusedObject: Object3D | null;
   /**
@@ -33,6 +33,9 @@ export interface SceneExt {
   timeScale: number;
   /** The total time elapsed in the scene. */
   totalTime: number;
+
+  /** Reference to the scene the object belongs to. */
+  get scene(): this;
 
   /**
    * Sets the focus to the specified Object3D within the scene, or clears the focus if no target is provided.
